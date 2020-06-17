@@ -20,9 +20,10 @@ main(void) {
   int result = EXIT_FAILURE;;
 
   coap_startup();
+  coap_set_log_level(LOG_INFO);
 
   /* resolve destination address where server should be sent */
-  if (resolve_address("coap.me", "5683", &dst) < 0) {
+  if (resolve_address("localhost", "5683", &dst) < 0) {
     coap_log(LOG_CRIT, "failed to resolve address\n");
     goto finish;
   }
@@ -53,13 +54,16 @@ main(void) {
   }
 
   /* add a Uri-Path option */
-  coap_add_option(pdu, COAP_OPTION_URI_PATH, 5,
-                  reinterpret_cast<const uint8_t *>("hello"));
+  coap_add_option(pdu, COAP_OPTION_OBSERVE, COAP_OBSERVE_ESTABLISH, NULL);
+  coap_add_option(pdu, COAP_OPTION_URI_PATH, 4,
+                  reinterpret_cast<const uint8_t *>("time"));
 
   /* and send the PDU */
   coap_send(session, pdu);
 
+  while(1) {
   coap_run_once(ctx, 0);
+  }
 
   result = EXIT_SUCCESS;
  finish:
